@@ -40,6 +40,7 @@ class operation
 public:
 	oper_type op;
 	operation(oper_type op = add) :op(op) {}
+	operation(char oper);
 	double operator()(double a, double b);
 
 	bool operator==(char c) { return c == '+' || c == '-' || c == '*' || c == '/'; }
@@ -60,11 +61,12 @@ public:
 	friend std::ostream& operator<<(std::ostream& str, const bracket v);
 };
 
-//class function
-//{
-//
-//	token_type get_token_name() { return Function; }
-//};
+class function
+{
+	token_type get_token_name() { return Function; }
+
+	friend std::ostream& operator<<(std::ostream& str, const function f) { str << '-'; return str; }
+};
 
 //typedef std::variant<variable, number, operation, bracket> token;
 
@@ -75,6 +77,7 @@ public:
 	number num;
 	operation oper;
 	bracket brack;
+	function func;
 
 	token_type type;
 
@@ -86,6 +89,8 @@ std::ostream& operator<<(std::ostream& str, const token v);
 bool correct(std::string);
 
 int oper_priority(operation op);
+
+token getnumber(std::string s, int& index);
 
 vector<token> parcer(std::string);
 

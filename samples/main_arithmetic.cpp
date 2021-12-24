@@ -24,7 +24,7 @@ int main()
 		catch (exception e)
 		{
 			std::cout << e.what() << " in symbol number " << e.index << '\n';
-			
+			is_correct = false;
 		}
 	}
 

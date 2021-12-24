@@ -9,10 +9,10 @@ TEST(stack, can_create_stack)
 	ASSERT_NO_THROW(stack<int> ());
 }
 
-TEST(stack, can_create_stack_with_init_list)
-{
-	//ASSERT_NO_THROW(stack<int> { 1,2,3 });
-}
+//TEST(stack, can_create_stack_with_init_list)
+//{
+//	ASSERT_NO_THROW(stack<int> s{ 1,2,3 });
+//}
 
 TEST(stack, can_copy_stack)
 {

@@ -21,6 +21,27 @@ double operation::operator()(double a, double b)
 	}
 }
 
+operation::operation(char oper)
+{
+	switch (oper)
+	{
+	case '+':
+		op = add;
+		break;
+	case '-':
+		op = sub;
+		break;
+	case '*':
+		op = mul;
+		break;
+	case '/':
+		op = divide;
+		break;
+	default:
+		break;
+	}
+}
+
 std::ostream& operator<<(std::ostream& str, const operation oper)
 {
 	switch (oper.op)
@@ -90,6 +111,10 @@ std::ostream& operator<<(std::ostream& str, const token tok)
 		break;
 	case Bracket:
 		str << tok.brack;
+		break;
+	case Function:
+		str << tok.func;
+		break;
 	}
 }
 
@@ -98,11 +123,26 @@ bool correct(std::string input)
 	int count_brack = 0;
 	int open_brack_ind = -1;
 	bool is_open = false;
+	bool dot = false;
+
+	if (input[0] == ')' || operation() == input[0] && input[0] != '-')
+		throw exception("Wrong beggining of the expretion", 0);
 
 	for (int i = 0; i < input.size(); i++)
 	{
 		if (variable() != input[i] && number() != input[i] && operation() != input[i] && bracket() != input[i])
 			throw exception("Wrong symbol", i);
+
+		if (input[i] == '.' && !dot)
+		{
+			dot = true;
+		}
+		else
+			throw exception("Two dots in number", i);
+
+		if (number() != input[i])
+			dot = false;
+
 		if (bracket() == input[i])
 		{
 			if (input[i] == '(')
@@ -121,9 +161,29 @@ bool correct(std::string input)
 		}
 		if (i != 0 && variable() == input[i] && variable() == input[i - 1])
 			throw exception("Name for variable is too long, use one symbol for variable", i);
+
+		if (i != 0 && bracket() == input[i] && (number() == input[i - 1] && variable() == input[i - 1]))
+			throw exception("Bracket after number or variable", i);
+
+		if (i != 0 && bracket() == input[i-1] && (number() == input[i] && variable() == input[i]))
+			throw exception("N or variable after bracket", i);
+
+		if (i != 0 && '-' == input[i - 1] && (number() != input[i] || variable() != input[i]) || bracket() != input[i])
+			throw exception("Not a number after -", i);
+
+		if (i != 0 && operation() == input[i - 1] && (operation() == input[i] && '-' != input[i]))
+			throw exception("Incorrect symbol after opration", i);
+
+		if (i != 0 && input[i - 1] == '.' && (number() != input[i] || input[i] == '.'))
+			throw exception("Number cant end with dot", i);
 	}
+	if (input[input.size() - 1] == ')' || operation() == input[input.size() - 1] && input[input.size() - 1] != '-')
+		throw exception("Wrong ending of the expretion", input.size() - 1);
+
 	if (is_open)
-		throw exception("The closing parenthesis is missing", open_brack_ind);
+		throw exception("The closing bracket is missing", open_brack_ind);
+
+	return true;
 }
 
 token getnumber(std::string s, int& index)
@@ -135,6 +195,21 @@ token getnumber(std::string s, int& index)
 		result += s[index] - '0';
 		index++;
 	}
+
+
+	if (s[index] == '.')
+	{
+		index++;
+		double power = 0.1;
+		while (index < s.size() && s[index] >= '0' && s[index] <= '9')
+		{
+			result += (s[index] - '0') * power;
+			power *= 0.1;
+			index++;
+		}
+	}
+			
+
 	token tmp;
 	tmp.type = Variable;
 	tmp.var = variable(result);
@@ -151,6 +226,74 @@ int oper_priority(operation type)
 	case mul:
 	case divide:
 		return 1;
+	}
+}
+
+int oper_priority(function)
+{
+	return 3;
+}
+
+vector<token> parcer(std::string input)
+{
+	vector<token> result;
+
+	int index = 0;
+	while (index != input.size())
+	{
+		if (number() == input[index])
+			result.push_back(getnumber(input, index));
+		if (index == input.size())
+			break;
+
+		if (variable() == input[index])
+		{
+			token tmp;
+			tmp.var = variable(input[index++]);
+			tmp.type = Variable;
+			result.push_back(tmp);
+		}
+		if (index == input.size())
+			break;
+
+		if (bracket() == input[index])
+		{
+			token tmp;
+			if (input[index] == '(')
+				tmp.brack.open = true;
+			else
+				tmp.brack.open = false;
+			tmp.brack = bracket(input[index++]);
+			tmp.type = Bracket;
+			result.push_back(tmp);
+		}
+		if (index == input.size())
+			break;
+
+		if (operation() == input[index])
+		{
+			token tmp;
+			if (input[index] != '-')
+			{
+				tmp.type = Operation;
+				tmp.oper = operation(input[index]);
+			}
+			else
+			{
+				if (index == 0 || input[index - 1] == '(' || operation() == input[index - 1])
+				{
+					tmp.type = Function;
+				}
+				else
+				{
+					tmp.type = Operation;
+					tmp.oper = operation(input[index]);
+				}
+				
+			}
+			result.push_back(tmp);
+			index++;
+		}
 	}
 }
 
@@ -184,9 +327,17 @@ vector<token> to_polish(vector<token> vec)
 				st.pop();
 			}
 			break;
+		case Function:
+			st.push_back(vec[i]);
 		}
 	}
 
+	while (!st.is_empty())
+	{
+		result.push_back(st.pop());
+	}
+
+	return result;
 }
 
 bool check_names(vector<token*>& vars)
@@ -220,10 +371,22 @@ void get_variables(vector<token>& tok)
 		while (i < name.size() && name[i] == ' ' || name[i] == '=')
 		{
 		
-				if (number() == name[i])
-					value = getnumber(name, i).var.value;
+				
 			i++;
 		}
+
+		try 
+		{
+			correct(name.substr(i, name.size()));
+		}
+		catch(exception e)
+		{
+			std::cout << e.what << " " << e.index << '\n';
+			continue;
+		}
+
+		if (number() == name[i])
+			value = getnumber(name, i).var.value;
 		if (i != name.size())
 		{
 			std::cout << "Wrong symbol in number\n";
@@ -259,6 +422,11 @@ double compute(vector<token> expr)
 		case Operation:
 			double tmp = result.pop();
 			tmp = expr[i].oper.operator()(tmp, result.pop());
+			result.push_back(tmp);
+			break;
+		case Function:
+			double tmp = result.pop();
+			tmp *= -1;
 			result.push_back(tmp);
 			break;
 		default:
