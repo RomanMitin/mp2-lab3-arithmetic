@@ -197,9 +197,17 @@ bool correct(std::string input)
 			throw exception("Bracket after number or variable", i);
 
 		if (i != 0 && bracket() == input[i-1] && (number() == input[i] && variable() == input[i]))
-			throw exception("N or variable after bracket", i);
+			throw exception("Number or variable after bracket", i);
 
-		if (i != 0 && '-' == input[i - 1] && number() != input[i] && variable() != input[i] && bracket() != input[i])
+		if (i != 0 && (number() == input[i - 1] || variable() == input[i - 1]) && \
+			operation() != input[i] && input[i] != ')' && number() != input[i])
+			throw exception("Number or variable before bracket", i);
+
+		if (i != 0 && (number() == input[i] || variable() == input[i]) && \
+			operation() != input[i - 1] && input[i - 1] != '(' && number() != input[i - 1])
+			throw exception("Number or variable after bracket", i);
+
+		if (i != 0 && '-' == input[i - 1] && number() != input[i] && variable() != input[i] && bracket() != input[i] && '-' != input[i])
 			throw exception("Not a number or bracket after -", i);
 
 		if (i != 0 && operation() == input[i - 1] && (operation() == input[i] && '-' != input[i]))
@@ -227,7 +235,6 @@ token getnumber(std::string s, int& index)
 		index++;
 	}
 
-
 	if (s[index] == '.')
 	{
 		index++;
@@ -240,7 +247,6 @@ token getnumber(std::string s, int& index)
 		}
 	}
 			
-
 	token tmp;
 	tmp.type = Number;
 	tmp.num = number(result);
@@ -290,11 +296,7 @@ vector<token> parcer(std::string input)
 		if (bracket() == input[index])
 		{
 			token tmp;
-			if (input[index] == '(')
-				tmp.brack.open = true;
-			else
-				tmp.brack.open = false;
-			tmp.brack = bracket(input[index++]);
+			tmp.brack = bracket(input[index++] == '(');
 			tmp.type = Bracket;
 			result.push_back(tmp);
 		}
@@ -344,7 +346,8 @@ vector<token> to_polish(vector<token> vec)
 			result.push_back(vec[i]);
 			break;
 		case Operation:
-			while (oper_priority(vec[i].oper) >= oper_priority(st.top().oper))
+			while (!st.is_empty() && st.top().type != Bracket\
+				&& oper_priority(vec[i].oper) >= oper_priority(st.top().oper))
 				result.push_back(st.pop());
 			st.push_back(vec[i]);
 			break;
@@ -355,7 +358,7 @@ vector<token> to_polish(vector<token> vec)
 			}
 			else
 			{
-				while (st.top().brack != '(')
+				while (st.top().type != Bracket)
 					result.push_back(st.pop());
 				st.pop();
 			}
@@ -403,8 +406,6 @@ void get_variables(vector<token>& tok)
 		double value;
 		while (i < name.size() && name[i] == ' ' || name[i] == '=')
 		{
-		
-				
 			i++;
 		}
 
@@ -458,7 +459,7 @@ double compute(vector<token> expr)
 		case Operation:
 		{
 			double tmp = result.pop();
-			tmp = expr[i].oper.operator()(tmp, result.pop());
+			tmp = expr[i].oper.operator()(result.pop(), tmp);
 			result.push_back(tmp);
 			break;
 		}

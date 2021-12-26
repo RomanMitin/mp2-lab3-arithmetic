@@ -39,12 +39,13 @@ int main()
 
 	postfix = to_polish(tokens);
 	std::cout << "Postfix:\n";
-	for (int i = 0; i < tokens.size(); i++)
-		std::cout << tokens[i] << ' ';
+	for (int i = 0; i < postfix.size(); i++)
+		std::cout << postfix[i] << ' ';
 	std::cout << "\n\n";
 
 	double result = compute(postfix);
 
 	std::cout << "Result is: " << result << '\n';
+	system("pause");
 	return 0;
 }
