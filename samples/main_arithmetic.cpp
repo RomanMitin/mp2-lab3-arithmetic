@@ -1,8 +1,8 @@
 // реализация пользовательского приложения
 #include<iostream>
-#include"stack.h"
-#include"vector.h"
-#include"arithmetic.h"
+#include"..\\include\stack.h"
+#include"..\\include\vector.h"
+#include"..\\include\arithmetic.h"
 
 
 int main()

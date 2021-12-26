@@ -2,9 +2,8 @@
 #pragma once
 #include<string>
 #include<iostream>
-#include<variant>
 #include<exception>
-#include"stack.h"
+#include"..\\include\stack.h"
 
 enum token_type { Variable, Number, Operation, Bracket, Function };
 enum oper_type { add, sub, mul, divide };
@@ -17,7 +16,7 @@ public:
 
 	variable(char c = '\0', double val = INFINITY) :name(c), value(val)  {}
 
-	bool operator==(char c) { return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z'; }
+	bool operator==(char c) { return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'); }
 	bool operator!=(char c) { return !(*this == c); }
 
 	friend std::ostream& operator<<(std::ostream& str, const variable v) { str << v.name; return str; }
@@ -83,7 +82,8 @@ public:
 
 	token& operator=(const token& sec);
 
-	bool operator==(const token& sec);
+	bool operator==(const token& sec) const;
+	bool operator!=(const token& sec) const;
 };
 
 std::ostream& operator<<(std::ostream& str, const token v);

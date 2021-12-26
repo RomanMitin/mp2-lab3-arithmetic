@@ -1,7 +1,7 @@
 // тесты для стека
 
 #include <gtest.h>
-#include "stack.h"
+#include "..\\include\stack.h"
 
 
 TEST(stack, can_create_stack)

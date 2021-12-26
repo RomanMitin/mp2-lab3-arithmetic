@@ -1,7 +1,6 @@
 // реализация функций и классов для вычисления арифметических выражений
 #include"..\\include\arithmetic.h"
 
-
 double operation::operator()(double a, double b)
 {
 	switch (this->op)
@@ -96,16 +95,16 @@ token& token::operator=(const token& sec)
 	}
 }
 
-bool token::operator==(const token& sec)
+bool token::operator==(const token& sec) const
 {
 	if (type != sec.type)
 		return false;
 	switch (type)
 	{
 	case Variable:
-		return var.name = sec.var.name && var.value == sec.var.value;
+		return var.name == sec.var.name && var.value == sec.var.value;
 	case Number:
-		return num.val = sec.num.val;
+		return num.val == sec.num.val;
 	case Operation:
 		return oper.op == sec.oper.op;
 	case Bracket:
@@ -113,6 +112,11 @@ bool token::operator==(const token& sec)
 	case Function:
 		return true;
 	}
+}
+
+bool token::operator!=(const token& sec) const
+{
+	return !(*this == sec);
 }
 
 std::ostream& operator<<(std::ostream& str, const token tok)
@@ -135,6 +139,7 @@ std::ostream& operator<<(std::ostream& str, const token tok)
 		str << tok.func;
 		break;
 	}
+	return str;
 }
 
 bool correct(std::string input)
@@ -160,7 +165,10 @@ bool correct(std::string input)
 			dot = true;
 		}
 		else
-			throw exception("Two dots in number", i);
+		{
+			if (input[i] == '.')
+				throw exception("Two dots in number", i);
+		}
 
 		if (number() != input[i])
 			dot = false;
@@ -179,6 +187,7 @@ bool correct(std::string input)
 				if (count_brack == 0)
 					throw exception("The opening parenthesis is missing", i);
 				count_brack--;
+				is_open = false;
 			}
 		}
 		if (i != 0 && variable() == input[i] && variable() == input[i - 1])
@@ -190,19 +199,19 @@ bool correct(std::string input)
 		if (i != 0 && bracket() == input[i-1] && (number() == input[i] && variable() == input[i]))
 			throw exception("N or variable after bracket", i);
 
-		if (i != 0 && '-' == input[i - 1] && (number() != input[i] || variable() != input[i]) || bracket() != input[i])
-			throw exception("Not a number after -", i);
+		if (i != 0 && '-' == input[i - 1] && number() != input[i] && variable() != input[i] && bracket() != input[i])
+			throw exception("Not a number or bracket after -", i);
 
 		if (i != 0 && operation() == input[i - 1] && (operation() == input[i] && '-' != input[i]))
-			throw exception("Incorrect symbol after opration", i);
+			throw exception("Incorrect symbol after operation", i);
 
 		if (i != 0 && input[i - 1] == '.' && (number() != input[i] || input[i] == '.'))
 			throw exception("Number cant end with dot", i);
 	}
-	if (input[input.size() - 1] == ')' || operation() == input[input.size() - 1] && input[input.size() - 1] != '-')
+	if (input[input.size() - 1] == '(' || operation() == input[input.size() - 1] || input[input.size() - 1] == '.')
 		throw exception("Wrong ending of the expretion", input.size() - 1);
 
-	if (is_open)
+	if (count_brack)
 		throw exception("The closing bracket is missing", open_brack_ind);
 
 	return true;
@@ -233,8 +242,8 @@ token getnumber(std::string s, int& index)
 			
 
 	token tmp;
-	tmp.type = Variable;
-	tmp.var = variable(result);
+	tmp.type = Number;
+	tmp.num = number(result);
 	return tmp;
 }
 
@@ -382,7 +391,7 @@ void get_variables(vector<token>& tok)
 
 	std::string name;
 
-	while (check_names(vars))
+	while (!check_names(vars))
 	{
 		std::getline(std::cin, name);
 		if (variable() != name[0])
@@ -410,7 +419,7 @@ void get_variables(vector<token>& tok)
 		}
 
 		if (number() == name[i])
-			value = getnumber(name, i).var.value;
+			value = getnumber(name, i).num.val;
 		if (i != name.size())
 		{
 			std::cout << "Wrong symbol in number\n";
@@ -467,164 +476,3 @@ double compute(vector<token> expr)
 	return result.pop();
 }
 
-//double operation::operator()(double a, double b)
-//{
-//	switch (this->op)
-//	{
-//	case add:
-//		return a + b;
-//		break;
-//	case sub:
-//		return a - b;
-//		break;
-//	case mul:
-//		return a * b;
-//		break;
-//	case div:
-//		return a / b;
-//		break;
-//	}
-//}
-//
-//token getnumber(std::string s,int& index)
-//{
-//	double result = 0.0;
-//	while (index < s.size() && s[index] >= '0' && s[index] <= '9')
-//	{
-//		result *= 10.0;
-//		result += s[index] - '0';
-//		index++;
-//	}
-//
-//	//if (s[index] == 'e')
-//	//{
-//	//	if (s[++index] == '+')
-//	//	{
-//	//		double power = 0.0;
-//	//		while (index < s.size() && s[index] >= '0' && s[index] <= '9')
-//	//		{
-//	//			power *= 10.0;
-//	//			power += s[index] - '0';
-//	//			index++;
-//	//		}
-//	//	}
-//	//}
-//
-//	if (s[index] == '.')
-//	{
-//		index++;
-//	}
-//	else
-//	{
-//		return number(result);
-//	}
-//
-//	double power = 0.1;
-//	while (index < s.size() && s[index] >= '0' && s[index] <= '9')
-//	{
-//		result += (s[index] - '0') * power;
-//		power *= 0.1;
-//		index++;
-//	}
-//	
-//	
-//	return number(result);
-//}
-//
-//token getvariable(std::string s, int& index)
-//{
-//	std::string name;
-//	while (index < s.size() && (s[index] >= 'a' && s[index] <= 'z' || s[index] >= 'A' && s[index] <= 'Z'))
-//	{
-//		name.push_back(s[index]);
-//		index++;
-//	}
-//	std::string value;
-//	std::getline(std::cin, value);
-//	int i = 0;
-//	while (i < value.size() && (value[i] < '0' || value[i]>'9'))
-//		i++;
-//	if (i == value.size())
-//	{
-//		auto tmp = std::string("No value for variable ") + name;
-//		throw std::exception(tmp.c_str());
-//	}
-//}
-//
-//token getbracket(std::string s, int& index)
-//{
-//	index++;
-//	token result;
-//	if (s[index] == '(')
-//		result = bracket(true);
-//	if (s[index] == ')')
-//		result = bracket(false);
-//	return result;
-//}
-//
-//token getoperation(std::string s, int& index)
-//{
-//	index++;
-//	token tok;
-//	switch (s[index])
-//	{
-//	case '+':
-//		tok = operation(add);
-//		break;
-//	case '-':
-//		tok = operation(sub);
-//		break;
-//	case '*':
-//		tok = operation(mul);
-//		break;
-//	case '/':
-//		tok = operation(div);
-//		break;
-//	}
-//	return tok;
-//}
-//
-//token check(std::string s, int& index)
-//{
-//	if (s[index] >= '0' && s[index] <= '9')
-//		return getnumber(s, index);
-//
-//	if (s[index] >= 'a' && s[index] <= 'z' || s[index] >= 'A' && s[index] <= 'Z')
-//		return getvariable(s, index);
-//
-//	if (s[index] == '(' || s[index] == ')')
-//		return getbracket(s, index);
-//
-//	if (s[index] == '+' || s[index] == '-' || s[index] == '*' || s[index] == '+') // Обработать функции
-//		return getoperation(s, index);
-//
-//	throw std::exception("Wrond simbol");
-//}
-//
-//
-//stack<token> parcer(std::string s)
-//{
-//	stack<token> result;
-//
-//	int count = 0;
-//
-//	for (int i = 0; i < s.size(); i++)
-//	{
-//		result.push_back(check(s, i));
-//		token tok = result.top();
-//		if (tok.index() == Bracket)
-//		{
-//			if (std::get<bracket>(tok).open)
-//			{
-//				count++;
-//			}
-//			else
-//			{
-//				if (!count)
-//					count--;
-//				else
-//					throw std::exception("Incorrect bracket sequence");
-//			}
-//		}
-//	}
-//}
