@@ -82,6 +82,8 @@ public:
 	token_type type;
 
 	token& operator=(const token& sec);
+
+	bool operator==(const token& sec);
 };
 
 std::ostream& operator<<(std::ostream& str, const token v);

@@ -96,6 +96,25 @@ token& token::operator=(const token& sec)
 	}
 }
 
+bool token::operator==(const token& sec)
+{
+	if (type != sec.type)
+		return false;
+	switch (type)
+	{
+	case Variable:
+		return var.name = sec.var.name && var.value == sec.var.value;
+	case Number:
+		return num.val = sec.num.val;
+	case Operation:
+		return oper.op == sec.oper.op;
+	case Bracket:
+		return brack.open == sec.brack.open;
+	case Function:
+		return true;
+	}
+}
+
 std::ostream& operator<<(std::ostream& str, const token tok)
 {
 	switch (tok.type)
@@ -124,6 +143,9 @@ bool correct(std::string input)
 	int open_brack_ind = -1;
 	bool is_open = false;
 	bool dot = false;
+
+	if (input.empty())
+		return true;
 
 	if (input[0] == ')' || operation() == input[0] && input[0] != '-')
 		throw exception("Wrong beggining of the expretion", 0);
@@ -295,6 +317,8 @@ vector<token> parcer(std::string input)
 			index++;
 		}
 	}
+
+	return result;
 }
 
 vector<token> to_polish(vector<token> vec)
@@ -381,7 +405,7 @@ void get_variables(vector<token>& tok)
 		}
 		catch(exception e)
 		{
-			std::cout << e.what << " " << e.index << '\n';
+			std::cout << e.what() << " " << e.index << '\n';
 			continue;
 		}
 
@@ -407,6 +431,9 @@ void get_variables(vector<token>& tok)
 
 double compute(vector<token> expr)
 {
+	if (expr.empty())
+		return 0.0;
+
 	stack<double> result;
 
 	for (int i = 0; i < expr.size(); i++)
@@ -420,15 +447,19 @@ double compute(vector<token> expr)
 			result.push_back(expr[i].num.val);
 			break;
 		case Operation:
+		{
 			double tmp = result.pop();
 			tmp = expr[i].oper.operator()(tmp, result.pop());
 			result.push_back(tmp);
 			break;
+		}
 		case Function:
+		{
 			double tmp = result.pop();
 			tmp *= -1;
 			result.push_back(tmp);
 			break;
+		}
 		default:
 			break;
 		}
