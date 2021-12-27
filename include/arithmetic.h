@@ -67,8 +67,6 @@ class function
 	friend std::ostream& operator<<(std::ostream& str, const function f) { str << '-'; return str; }
 };
 
-//typedef std::variant<variable, number, operation, bracket> token;
-
 class token
 {
 public:

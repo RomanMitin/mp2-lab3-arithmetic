@@ -485,4 +485,3 @@ double compute(vector<token> expr)
 	}
 	return result.pop();
 }
-

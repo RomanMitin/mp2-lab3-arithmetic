@@ -255,7 +255,6 @@ TEST(parcer, par2)
 
 	vector<token> exp = { t0,t1,t2,t3,t4,t5 };
 	EXPECT_EQ(exp, act);
-	//EXPECT_EQ(exp, act);
 }
 
 TEST(parcer, par3)
