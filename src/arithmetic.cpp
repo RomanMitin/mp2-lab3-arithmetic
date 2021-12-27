@@ -379,7 +379,7 @@ vector<token> to_polish(vector<token> vec)
 bool check_names(vector<token*>& vars)
 {
 	for (int i = 0; i < vars.size(); i++)
-		if (vars[i]->var.name == '\0')
+		if (vars[i]->var.value == INFINITY)
 			return false;
 	return true;
 }
@@ -415,8 +415,15 @@ void get_variables(vector<token>& tok)
 		}
 		catch(exception e)
 		{
-			std::cout << e.what() << " " << e.index << '\n';
+			std::cout << e.what() << ": " << e.index << '\n';
 			continue;
+		}
+
+		bool minus = false;
+		if (name[i] == '-')
+		{
+			minus = true;
+			i++;
 		}
 
 		if (number() == name[i])
@@ -427,12 +434,14 @@ void get_variables(vector<token>& tok)
 			continue;
 		}
 
+		if (minus)
+			value *= -1;
+
 		for (int i = 0; i < vars.size(); i++)
 		{
 			if (vars[i]->var.name == name[0])
 			{
 				vars[i]->var.value = value;
-				break;
 			}
 		}
 	}
