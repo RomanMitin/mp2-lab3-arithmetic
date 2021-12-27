@@ -415,11 +415,3 @@ TEST(compute, 8)
 	double act = compute(to_polish(parcer(s)));
 	EXPECT_EQ(-14, act);
 }
-
-TEST(compute, complex)
-{
-	std::string s = "(3 + 4 * 2) - (10 - 2 * 5) + ((1))";
-	double act = compute(to_polish(parcer(s)));
-	EXPECT_EQ(12, act);
-	system("pause");
-}
